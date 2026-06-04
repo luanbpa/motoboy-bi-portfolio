@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard Motoboy App</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Portfolio BI</p>
+        <h1>Dashboard de ganhos como motoboy de app</h1>
+      </div>
+      <div class="period-controls">
+        <label>
+          Periodo
+          <select id="periodFilter" aria-label="Selecionar periodo">
+            <option value="latest">Mes atual</option>
+            <option value="all">Acumulado</option>
+          </select>
+        </label>
+        <div class="period">
+          <span id="periodLabel">Carregando dados...</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="layout">
+      <nav class="tabs" aria-label="Abas do dashboard">
+        <button type="button" class="tab-button active" data-tab="dashboardTab">Dashboard</button>
+        <button type="button" class="tab-button" data-tab="projectionTab">Projecao liquida</button>
+      </nav>
+
+      <section id="dashboardTab" class="tab-panel active">
+      <section class="kpis" aria-label="Indicadores principais">
+        <article class="kpi compare-card performance-card">
+          <span>Comparativos de desempenho</span>
+          <div class="performance-list">
+            <div class="performance-row" id="perfDaily">
+              <strong class="xp-title">Valor diario</strong>
+              <div class="xp-bar" aria-label="Barra de experiencia do valor diario">
+                <div class="xp-track">
+                  <div class="xp-fill"></div>
+                  <div class="xp-marker marker-min">
+                    <span>Min</span>
+                    <strong id="kpiMinimumDay">R$ 0,00</strong>
+                  </div>
+                  <div class="xp-marker marker-real">
+                    <span>Real</span>
+                    <strong id="kpiAvgDay">R$ 0,00</strong>
+                  </div>
+                  <div class="xp-marker marker-expected">
+                    <span>Esp</span>
+                    <strong id="kpiExpectedDay">R$ 0,00</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="performance-row" id="perfRevenue">
+              <strong class="xp-title">Receita</strong>
+              <div class="xp-bar" aria-label="Barra de experiencia da receita">
+                <div class="xp-track">
+                  <div class="xp-fill"></div>
+                  <div class="xp-marker marker-min">
+                    <span>Min</span>
+                    <strong id="kpiMinimumRevenue">R$ 0,00</strong>
+                  </div>
+                  <div class="xp-marker marker-real">
+                    <span>Real</span>
+                    <strong id="kpiRevenue">R$ 0,00</strong>
+                  </div>
+                  <div class="xp-marker marker-expected">
+                    <span>Esp</span>
+                    <strong id="kpiExpectedRevenue">R$ 0,00</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="performance-row" id="perfHour">
+              <strong class="xp-title">Receita por hora</strong>
+              <div class="xp-bar" aria-label="Barra de experiencia da receita por hora">
+                <div class="xp-track">
+                  <div class="xp-fill"></div>
+                  <div class="xp-marker marker-min">
+                    <span>Min</span>
+                    <strong id="kpiMinimumHour">R$ 0,00</strong>
+                  </div>
+                  <div class="xp-marker marker-real">
+                    <span>Real</span>
+                    <strong id="kpiHour">R$ 0,00</strong>
+                  </div>
+                  <div class="xp-marker marker-expected">
+                    <span>Esp</span>
+                    <strong id="kpiExpectedHour">R$ 0,00</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+        <article class="kpi expense">
+          <span>Despesas</span>
+          <strong id="kpiExpenses">R$ 0,00</strong>
+        </article>
+        <article class="kpi net">
+          <span>Receita liquida</span>
+          <strong id="kpiNetRevenue">R$ 0,00</strong>
+        </article>
+        <article class="kpi">
+          <span>Dias trabalhados</span>
+          <strong id="kpiDays">0</strong>
+        </article>
+        <article class="kpi">
+          <span>Horas trabalhadas</span>
+          <strong id="kpiHours">0</strong>
+        </article>
+        <article class="kpi">
+          <span>Media de horas</span>
+          <strong id="kpiAvgHours">0</strong>
+        </article>
+        <article class="kpi">
+          <span>Receita por km</span>
+          <strong id="kpiKm">R$ 0,00</strong>
+        </article>
+      </section>
+
+      <section class="panel net-target-panel" aria-label="Quadro de receita liquida">
+        <div class="panel-head">
+          <h2>Receita liquida - minimo, esperado e real</h2>
+          <span class="workdays-badge">22 dias de trabalho</span>
+        </div>
+
+        <div class="net-target-grid">
+          <article class="net-target-card status-mid">
+            <span>Liquida minima</span>
+            <strong id="mainNetMinimum">R$ 0,00</strong>
+          </article>
+          <article class="net-target-card status-ok">
+            <span>Liquida esperada</span>
+            <strong id="mainNetExpected">R$ 0,00</strong>
+          </article>
+          <article class="net-target-card" id="mainNetRealCard">
+            <span>Liquida real</span>
+            <strong id="mainNetReal">R$ 0,00</strong>
+          </article>
+          <article class="net-target-card" id="mainDaysNeededCard">
+            <span>Dias para superar o minimo</span>
+            <strong id="mainDaysNeeded">0</strong>
+          </article>
+          <article class="net-target-card" id="mainHoursNeededCard">
+            <span>Horas para superar o minimo</span>
+            <strong id="mainHoursNeeded">0</strong>
+          </article>
+        </div>
+
+        <p class="net-target-summary" id="mainNetSummary">Calculando receita liquida...</p>
+      </section>
+
+      <section class="grid">
+        <div class="panel chart-panel">
+          <div class="panel-head">
+            <h2>Receita por dia</h2>
+            <select id="appFilter" aria-label="Filtrar app">
+              <option value="todos">Todos os apps</option>
+              <option value="IFOOD">iFood</option>
+              <option value="KEETA">Keeta</option>
+            </select>
+          </div>
+          <canvas id="dailyChart"></canvas>
+        </div>
+
+        <div class="panel chart-panel">
+          <div class="panel-head">
+            <h2>Total mensal</h2>
+          </div>
+          <canvas id="monthlyChart"></canvas>
+        </div>
+
+        <form class="panel form-panel" id="entryForm">
+          <div class="panel-head">
+          <h2>Lancamento</h2>
+            <div class="form-actions">
+              <button type="button" id="cancelEntryEdit" class="ghost hidden">Cancelar edicao</button>
+              <button type="button" id="resetLocal" class="ghost">Limpar dados locais</button>
+            </div>
+          </div>
+
+          <label>
+            Data
+            <input name="data" type="date" required />
+          </label>
+
+          <div class="form-row">
+            <label>
+              Horas
+              <input name="horas" type="text" inputmode="decimal" placeholder="Ex.: 6,5" required />
+            </label>
+            <label>
+              Km do dia
+              <input name="kmDia" type="text" inputmode="decimal" placeholder="Ex.: 120,5" required />
+            </label>
+          </div>
+
+          <div class="form-row">
+            <label>
+              App
+              <select name="app" required>
+                <option value="IFOOD">iFood</option>
+                <option value="KEETA">Keeta</option>
+                <option value="OUTRO">Outro</option>
+              </select>
+            </label>
+            <label>
+              Corridas
+              <input name="corridas" type="number" min="0" step="1" required />
+            </label>
+          </div>
+
+          <label>
+            Receita
+            <input name="receita" type="text" inputmode="decimal" placeholder="Ex.: 170,01" required />
+          </label>
+
+          <button type="submit" class="primary" id="entrySubmit">Adicionar ao painel</button>
+          <p class="hint">Os lancamentos ficam salvos na planilha local e atualizam os graficos imediatamente.</p>
+          <p class="form-message" id="entryMessage" role="status"></p>
+        </form>
+
+        <form class="panel form-panel" id="expenseForm">
+          <div class="panel-head">
+            <h2>Gasto</h2>
+            <button type="button" id="cancelExpenseEdit" class="ghost hidden">Cancelar edicao</button>
+          </div>
+
+          <label>
+            Data
+            <input name="data" type="date" required />
+          </label>
+
+          <div class="form-row">
+            <label>
+              Categoria
+              <select name="categoria" required>
+                <option value="Gasolina">Gasolina</option>
+                <option value="Manutencao">Manutencao</option>
+                <option value="Alimentacao">Alimentacao</option>
+                <option value="Garagem">Garagem</option>
+                <option value="Outros">Outros</option>
+              </select>
+            </label>
+            <label>
+              Valor
+              <input name="valor" type="text" inputmode="decimal" placeholder="Ex.: 50,00" required />
+            </label>
+          </div>
+
+          <label>
+            Observacao
+            <input name="observacao" type="text" maxlength="80" placeholder="Ex.: abastecimento, oleo, pneu" />
+          </label>
+
+          <button type="submit" class="danger" id="expenseSubmit">Adicionar gasto</button>
+          <p class="hint">Os gastos tambem ficam salvos neste navegador e entram no calculo da receita liquida.</p>
+          <p class="form-message" id="expenseMessage" role="status"></p>
+        </form>
+
+        <div class="panel table-panel">
+          <div class="panel-head">
+            <h2>Ultimos dias</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Horas</th>
+                  <th>Corridas</th>
+                  <th>Km</th>
+                  <th>Receita</th>
+                  <th>R$/h</th>
+                  <th>Acao</th>
+                </tr>
+              </thead>
+              <tbody id="dailyTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel table-panel">
+          <div class="panel-head">
+            <h2>Ultimos gastos</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Categoria</th>
+                  <th>Observacao</th>
+                  <th>Valor</th>
+                  <th>Acao</th>
+                </tr>
+              </thead>
+              <tbody id="expenseTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+      </section>
+
+      <section id="projectionTab" class="tab-panel">
+        <section class="panel projection-panel">
+          <div class="panel-head">
+            <h2>Projecao de receita liquida - 22 dias</h2>
+          </div>
+
+          <div class="projection-grid">
+            <article class="projection-card status-mid">
+              <span>Liquida minima mensal</span>
+              <strong id="projNetMinimum">R$ 0,00</strong>
+            </article>
+            <article class="projection-card status-ok">
+              <span>Liquida esperada mensal</span>
+              <strong id="projNetExpected">R$ 0,00</strong>
+            </article>
+            <article class="projection-card" id="projNetRealCard">
+              <span>Liquida real atual</span>
+              <strong id="projNetReal">R$ 0,00</strong>
+            </article>
+          </div>
+
+          <div class="projection-grid">
+            <article class="projection-card">
+              <span>Dias considerados</span>
+              <strong>22</strong>
+            </article>
+            <article class="projection-card" id="projDaysNeededCard">
+              <span>Dias necessarios acima do minimo</span>
+              <strong id="projDaysNeeded">0</strong>
+            </article>
+            <article class="projection-card" id="projHoursNeededCard">
+              <span>Horas necessarias acima do minimo</span>
+              <strong id="projHoursNeeded">0</strong>
+            </article>
+          </div>
+
+          <div class="projection-note">
+            <p id="projSummary">Calculando projecao...</p>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
