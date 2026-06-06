@@ -227,7 +227,9 @@ def main():
     entregas.to_csv(OUT_DIR / "entregas_por_app.csv", index=False, encoding="utf-8-sig")
     dia.to_csv(OUT_DIR / "resumo_diario.csv", index=False, encoding="utf-8-sig")
     resumo_app.to_csv(OUT_DIR / "resumo_por_app.csv", index=False, encoding="utf-8-sig")
-    input_template.to_csv(OUT_DIR / "modelo_lancamentos_novos.csv", index=False, encoding="utf-8-sig")
+    input_model_path = OUT_DIR / "modelo_lancamentos_novos.csv"
+    if not input_model_path.exists():
+        input_template.to_csv(input_model_path, index=False, encoding="utf-8-sig")
 
     print(f"Registros por app: {len(entregas)}")
     print(f"Dias trabalhados: {len(dia)}")

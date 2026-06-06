@@ -602,6 +602,66 @@ button {
   color: var(--green);
 }
 
+.projection-metrics-grid {
+  grid-template-columns: repeat(4, minmax(160px, 1fr));
+}
+
+.projection-app-section {
+  display: grid;
+  gap: 12px;
+}
+
+.projection-app-section h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 15px;
+}
+
+.projection-app-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+}
+
+.projection-app-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+  padding: 15px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #0b2030;
+}
+
+.projection-app-card div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.projection-app-card span {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.projection-app-card small,
+.projection-empty {
+  color: var(--muted);
+}
+
+.projection-app-card strong {
+  flex: 0 0 auto;
+  color: var(--green);
+  font-size: 18px;
+}
+
+.projection-empty {
+  margin: 0;
+}
+
 .projection-note {
   padding: 14px 16px;
   border: 1px solid var(--line);
@@ -715,6 +775,10 @@ tbody tr.selected-row {
 @media (max-width: 720px) {
   .net-target-grid {
     grid-template-columns: repeat(2, minmax(130px, 1fr));
+  }
+
+  .projection-metrics-grid {
+    grid-template-columns: 1fr;
   }
 }
 

@@ -3,6 +3,7 @@ from pathlib import Path
 import csv
 import json
 import sys
+from urllib.parse import urlparse
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -131,10 +132,20 @@ class Handler(SimpleHTTPRequestHandler):
         return json.loads(self.rfile.read(length).decode("utf-8"))
 
     def do_GET(self):
-        if self.path == "/api/entries":
+        path = urlparse(self.path).path
+        if path == "/":
+            self.send_response(302)
+            self.send_header("Location", "/dashboard_web/")
+            self.end_headers()
+            return
+        if path == "/api/health":
+            sync_entry_model(read_rows(ENTRIES_FILE, ENTRY_FIELDS))
+            self.send_json({"ok": True, "dashboard": "/dashboard_web/"})
+            return
+        if path == "/api/entries":
             self.send_json(read_rows(ENTRIES_FILE, ENTRY_FIELDS))
             return
-        if self.path == "/api/expenses":
+        if path == "/api/expenses":
             self.send_json(read_rows(EXPENSES_FILE, EXPENSE_FIELDS))
             return
         super().do_GET()
@@ -180,6 +191,7 @@ class Handler(SimpleHTTPRequestHandler):
 def main():
     ensure_file(ENTRIES_FILE, ENTRY_FIELDS)
     ensure_file(EXPENSES_FILE, EXPENSE_FIELDS)
+    sync_entry_model(read_rows(ENTRIES_FILE, ENTRY_FIELDS))
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8002
     server = ThreadingHTTPServer(("localhost", port), Handler)
     print(f"Dashboard rodando em http://localhost:{port}/dashboard_web/")
