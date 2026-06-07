@@ -598,7 +598,7 @@ function setEntryEditMode(index) {
 
 function clearEntryEditMode() {
   editingEntryIndex = null;
-  document.querySelector("#entryForm").reset();
+  safeResetForm(document.querySelector("#entryForm"));
   document.querySelector("#entrySubmit").textContent = "Adicionar ao painel";
   document.querySelector("#cancelEntryEdit").classList.add("hidden");
   document.querySelector("#entryMessage").textContent = "";
@@ -626,12 +626,18 @@ function setExpenseEditMode(index) {
 
 function clearExpenseEditMode() {
   editingExpenseIndex = null;
-  document.querySelector("#expenseForm").reset();
+  safeResetForm(document.querySelector("#expenseForm"));
   document.querySelector("#expenseSubmit").textContent = "Adicionar gasto";
   document.querySelector("#cancelExpenseEdit").classList.add("hidden");
   document.querySelector("#expenseMessage").textContent = "";
   document.querySelector("#expenseMessage").classList.remove("success", "error");
   render();
+}
+
+function safeResetForm(form) {
+  if (form && typeof form.reset === "function") {
+    form.reset();
+  }
 }
 
 function bindForm() {
@@ -647,7 +653,8 @@ function bindForm() {
 
   document.querySelector("#entryForm").addEventListener("submit", async (event) => {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const entryForm = event.currentTarget;
+    const form = new FormData(entryForm);
     const message = document.querySelector("#entryMessage");
     const kmDia = toNumber(form.get("kmDia"));
     const entry = {
@@ -670,7 +677,7 @@ function bindForm() {
       await reloadSavedData();
       document.querySelector("#periodFilter").value = monthKey(entry.data);
       document.querySelector("#appFilter").value = "todos";
-      event.currentTarget.reset();
+      safeResetForm(entryForm || document.querySelector("#entryForm"));
       document.querySelector("#entrySubmit").textContent = "Adicionar ao painel";
       document.querySelector("#cancelEntryEdit").classList.add("hidden");
       message.textContent = "Lancamento salvo e painel atualizado.";
@@ -686,7 +693,8 @@ function bindForm() {
 
   document.querySelector("#expenseForm").addEventListener("submit", async (event) => {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const expenseForm = event.currentTarget;
+    const form = new FormData(expenseForm);
     const message = document.querySelector("#expenseMessage");
     const expense = {
       data: form.get("data"),
@@ -704,7 +712,7 @@ function bindForm() {
       }
       await reloadSavedData();
       document.querySelector("#periodFilter").value = monthKey(expense.data);
-      event.currentTarget.reset();
+      safeResetForm(expenseForm || document.querySelector("#expenseForm"));
       document.querySelector("#expenseSubmit").textContent = "Adicionar gasto";
       document.querySelector("#cancelExpenseEdit").classList.add("hidden");
       message.textContent = "Gasto salvo e painel atualizado.";
@@ -730,7 +738,7 @@ function bindForm() {
       replaceEntries(extraRows.filter((_, rowIndex) => rowIndex !== index)).then(() => {
         if (editingEntryIndex === index) {
           editingEntryIndex = null;
-          document.querySelector("#entryForm").reset();
+          safeResetForm(document.querySelector("#entryForm"));
           document.querySelector("#entrySubmit").textContent = "Adicionar ao painel";
           document.querySelector("#cancelEntryEdit").classList.add("hidden");
         }
@@ -763,7 +771,7 @@ function bindForm() {
       replaceExpenses(expenseRows.filter((_, rowIndex) => rowIndex !== index)).then(() => {
         if (editingExpenseIndex === index) {
           editingExpenseIndex = null;
-          document.querySelector("#expenseForm").reset();
+          safeResetForm(document.querySelector("#expenseForm"));
           document.querySelector("#expenseSubmit").textContent = "Adicionar gasto";
           document.querySelector("#cancelExpenseEdit").classList.add("hidden");
         }
