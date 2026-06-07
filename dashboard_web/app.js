@@ -82,7 +82,7 @@ function setExpenses(rows) {
 }
 
 async function fetchJson(url, options) {
-  const response = await fetch(url, options);
+  const response = await fetch(url, { cache: "no-store", ...options });
   if (!response.ok) throw new Error(`Erro ${response.status} em ${url}`);
   return response.json();
 }
@@ -195,9 +195,10 @@ function aggregateDaily(rows) {
   rows.forEach((row) => {
     const key = row.data;
     if (!map.has(key)) {
-      map.set(key, { data: row.data, horas: row.horas, kmDia: row.kmDia, corridas: 0, receita: 0 });
+      map.set(key, { data: row.data, apps: [], horas: row.horas, kmDia: row.kmDia, corridas: 0, receita: 0 });
     }
     const item = map.get(key);
+    if (row.app && !item.apps.includes(row.app)) item.apps.push(row.app);
     item.horas = Math.max(item.horas, row.horas);
     item.kmDia = Math.max(item.kmDia, row.kmDia);
     item.corridas += row.corridas;
@@ -206,6 +207,7 @@ function aggregateDaily(rows) {
   return [...map.values()]
     .map((row) => ({
       ...row,
+      app: row.apps.join(" + "),
       metaDia: expectedDay,
     }))
     .sort((a, b) => a.data.localeCompare(b.data));
@@ -300,10 +302,10 @@ function updateKpis(rows, daily) {
     document.querySelector("#periodLabel").textContent = "Sem lancamentos";
   }
 
-  updateProjection({ revenue, expenses, netRevenue, hours, days });
+  updateProjection({ revenue, expenses, netRevenue, hours, km, days, rows });
 }
 
-function updateProjection({ revenue, expenses, netRevenue, hours, days }) {
+function updateProjection({ revenue, expenses, netRevenue, hours, km, days, rows }) {
   const workdaysTarget = 22;
   const minimumNet = minimumDay * workdaysTarget - expenses;
   const expectedNet = expectedDay * workdaysTarget - expenses;
@@ -331,7 +333,27 @@ function updateProjection({ revenue, expenses, netRevenue, hours, days }) {
   document.querySelector("#projNetReal").textContent = brl.format(netRevenue);
   document.querySelector("#projDaysNeeded").textContent = daysText;
   document.querySelector("#projHoursNeeded").textContent = hoursText;
+  document.querySelector("#projDaysWorked").textContent = String(days);
+  document.querySelector("#projHoursWorked").textContent = `${numberFmt.format(hours)} h`;
+  document.querySelector("#projAverageHours").textContent = `${numberFmt.format(days ? hours / days : 0)} h`;
+  document.querySelector("#projRevenueKm").textContent = brl.format(km ? revenue / km : 0);
   document.querySelector("#projSummary").textContent = summaryText;
+
+  const appRevenue = aggregateApps(rows);
+  document.querySelector("#projAppRevenue").innerHTML = appRevenue.length
+    ? appRevenue
+        .map((item) => {
+          const share = revenue ? (item.receita / revenue) * 100 : 0;
+          return `<article class="projection-app-card">
+            <div>
+              <span>${escapeHtml(item.app || "OUTRO")}</span>
+              <small>${numberFmt.format(share)}% da receita</small>
+            </div>
+            <strong>${brl.format(item.receita)}</strong>
+          </article>`;
+        })
+        .join("")
+    : `<p class="projection-empty">Nenhuma receita por aplicativo neste periodo.</p>`;
 
   setStatusClass("#mainNetRealCard", netStatus);
   setStatusClass("#mainDaysNeededCard", daysNeeded === 0 ? "ok" : "bad");
@@ -491,6 +513,7 @@ function updateTable(daily) {
       const isEditable = row.index !== null;
       return `<tr class="${isEditable ? "editable-row" : ""} ${row.index === editingEntryIndex ? "selected-row" : ""}" ${isEditable ? `data-entry-index="${row.index}"` : ""}>
         <td>${dateFmt.format(new Date(`${row.data}T00:00:00`))}</td>
+        <td>${escapeHtml(row.app || "-")}</td>
         <td>${numberFmt.format(row.horas)}</td>
         <td>${numberFmt.format(row.corridas)}</td>
         <td>${numberFmt.format(row.kmDia)}</td>
@@ -500,7 +523,7 @@ function updateTable(daily) {
       </tr>`;
     })
         .join("")
-    : `<tr><td colspan="7">Nenhum lancamento registrado.</td></tr>`;
+    : `<tr><td colspan="8">Nenhum lancamento registrado.</td></tr>`;
   document.querySelector("#dailyTable").innerHTML = html;
 }
 
@@ -575,7 +598,7 @@ function setEntryEditMode(index) {
 
 function clearEntryEditMode() {
   editingEntryIndex = null;
-  document.querySelector("#entryForm").reset();
+  safeResetForm(document.querySelector("#entryForm"));
   document.querySelector("#entrySubmit").textContent = "Adicionar ao painel";
   document.querySelector("#cancelEntryEdit").classList.add("hidden");
   document.querySelector("#entryMessage").textContent = "";
@@ -603,12 +626,18 @@ function setExpenseEditMode(index) {
 
 function clearExpenseEditMode() {
   editingExpenseIndex = null;
-  document.querySelector("#expenseForm").reset();
+  safeResetForm(document.querySelector("#expenseForm"));
   document.querySelector("#expenseSubmit").textContent = "Adicionar gasto";
   document.querySelector("#cancelExpenseEdit").classList.add("hidden");
   document.querySelector("#expenseMessage").textContent = "";
   document.querySelector("#expenseMessage").classList.remove("success", "error");
   render();
+}
+
+function safeResetForm(form) {
+  if (form && typeof form.reset === "function") {
+    form.reset();
+  }
 }
 
 function bindForm() {
@@ -624,7 +653,8 @@ function bindForm() {
 
   document.querySelector("#entryForm").addEventListener("submit", async (event) => {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const entryForm = event.currentTarget;
+    const form = new FormData(entryForm);
     const message = document.querySelector("#entryMessage");
     const kmDia = toNumber(form.get("kmDia"));
     const entry = {
@@ -647,7 +677,7 @@ function bindForm() {
       await reloadSavedData();
       document.querySelector("#periodFilter").value = monthKey(entry.data);
       document.querySelector("#appFilter").value = "todos";
-      event.currentTarget.reset();
+      safeResetForm(entryForm || document.querySelector("#entryForm"));
       document.querySelector("#entrySubmit").textContent = "Adicionar ao painel";
       document.querySelector("#cancelEntryEdit").classList.add("hidden");
       message.textContent = "Lancamento salvo e painel atualizado.";
@@ -663,7 +693,8 @@ function bindForm() {
 
   document.querySelector("#expenseForm").addEventListener("submit", async (event) => {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const expenseForm = event.currentTarget;
+    const form = new FormData(expenseForm);
     const message = document.querySelector("#expenseMessage");
     const expense = {
       data: form.get("data"),
@@ -681,7 +712,7 @@ function bindForm() {
       }
       await reloadSavedData();
       document.querySelector("#periodFilter").value = monthKey(expense.data);
-      event.currentTarget.reset();
+      safeResetForm(expenseForm || document.querySelector("#expenseForm"));
       document.querySelector("#expenseSubmit").textContent = "Adicionar gasto";
       document.querySelector("#cancelExpenseEdit").classList.add("hidden");
       message.textContent = "Gasto salvo e painel atualizado.";
@@ -707,7 +738,7 @@ function bindForm() {
       replaceEntries(extraRows.filter((_, rowIndex) => rowIndex !== index)).then(() => {
         if (editingEntryIndex === index) {
           editingEntryIndex = null;
-          document.querySelector("#entryForm").reset();
+          safeResetForm(document.querySelector("#entryForm"));
           document.querySelector("#entrySubmit").textContent = "Adicionar ao painel";
           document.querySelector("#cancelEntryEdit").classList.add("hidden");
         }
@@ -740,7 +771,7 @@ function bindForm() {
       replaceExpenses(expenseRows.filter((_, rowIndex) => rowIndex !== index)).then(() => {
         if (editingExpenseIndex === index) {
           editingExpenseIndex = null;
-          document.querySelector("#expenseForm").reset();
+          safeResetForm(document.querySelector("#expenseForm"));
           document.querySelector("#expenseSubmit").textContent = "Adicionar gasto";
           document.querySelector("#cancelExpenseEdit").classList.add("hidden");
         }
@@ -774,7 +805,10 @@ function bindForm() {
 }
 
 async function init() {
-  const [response, dailyResponse] = await Promise.all([fetch(DATA_URL), fetch(DAILY_URL)]);
+  const [response, dailyResponse] = await Promise.all([
+    fetch(DATA_URL, { cache: "no-store" }),
+    fetch(DAILY_URL, { cache: "no-store" }),
+  ]);
   const csv = await response.text();
   const dailyCsv = await dailyResponse.text();
   baseRows = parseCsv(csv);

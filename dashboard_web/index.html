@@ -277,6 +277,7 @@
               <thead>
                 <tr>
                   <th>Data</th>
+                  <th>App</th>
                   <th>Horas</th>
                   <th>Corridas</th>
                   <th>Km</th>
@@ -347,6 +348,32 @@
               <strong id="projHoursNeeded">0</strong>
             </article>
           </div>
+
+          <div class="projection-grid projection-metrics-grid">
+            <article class="projection-card">
+              <span>Dias trabalhados</span>
+              <strong id="projDaysWorked">0</strong>
+            </article>
+            <article class="projection-card">
+              <span>Horas trabalhadas</span>
+              <strong id="projHoursWorked">0 h</strong>
+            </article>
+            <article class="projection-card">
+              <span>Media de horas por dia</span>
+              <strong id="projAverageHours">0 h</strong>
+            </article>
+            <article class="projection-card">
+              <span>Receita por km</span>
+              <strong id="projRevenueKm">R$ 0,00</strong>
+            </article>
+          </div>
+
+          <section class="projection-app-section" aria-labelledby="projectionAppTitle">
+            <div class="panel-head">
+              <h3 id="projectionAppTitle">Receita por aplicativo</h3>
+            </div>
+            <div class="projection-app-grid" id="projAppRevenue"></div>
+          </section>
 
           <div class="projection-note">
             <p id="projSummary">Calculando projecao...</p>
